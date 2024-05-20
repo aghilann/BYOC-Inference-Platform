@@ -5,6 +5,7 @@ from models.MLModel import MLModel
 
 config.load_kube_config()
 
+
 class MLDeployer:
     def __init__(self):
         # TODO: Saves models even if it is not deployed successfully and subsequent requests will fail
@@ -17,7 +18,7 @@ class MLDeployer:
         model_name = model.name
         model_version = model.version
         model_image_url = model.image_url
-        
+
         model_exposed_port = model.exposed_port
         model_key = f"{model_name}:{model_version}"
 
@@ -143,12 +144,40 @@ class MLDeployer:
 
         model_metadata = self.models[model_key]
 
-        return ModelGetResponse(
+        return MLModel(
             name=model_name,
             image_url=model_metadata["model_image_url"],
             exposed_port=model_metadata["model_exposed_port"],
             version=model_metadata["model_version"],
         )
+
+    def delete_model(self, model_key: str):
+        model_split = model_key.split(":")
+
+        if len(model_split) != 2:
+            raise ValueError("Invalid model key")
+
+        model_name, model_version = model_split
+
+        if model_key not in self.models:
+            raise ValueError("Model not found")
+
+        try:
+            self.apps_v1_api.delete_namespaced_deployment(
+                name=f"{model_name}-{model_version}", namespace="default"
+            )
+            self.autoscaling_v1_api.delete_namespaced_horizontal_pod_autoscaler(
+                name=f"{model_name}-{model_version}-autoscaler", namespace="default"
+            )
+            self.core_v1_api.delete_namespaced_service(
+                name=f"{model_name}-{model_version}-service", namespace="default"
+            )
+        except ApiException as e:
+            print(f"Exception when deleting model: {e}")
+            raise
+
+        del self.models[model_key]
+
 
 if __name__ == "__main__":
     k8s = MLDeployer()
