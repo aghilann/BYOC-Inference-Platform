@@ -44,7 +44,7 @@ async def get_model(model_name: str, model_version: str):
     model_metadata = k8s.get_model(model_key)
 
     return {
-        **model_metadata
+        **model_metadata.dict()
     }
 
 
