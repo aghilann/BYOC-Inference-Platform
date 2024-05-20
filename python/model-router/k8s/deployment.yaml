@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: model-router-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: model-router
+  template:
+    metadata:
+      labels:
+        app: model-router
+    spec:
+      containers:
+        - name: model-router-container
+          image: aghilann/model-router
+          ports:
+            - containerPort: 8000
