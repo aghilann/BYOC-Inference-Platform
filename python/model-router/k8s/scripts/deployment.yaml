@@ -12,8 +12,10 @@ spec:
       labels:
         app: model-router
     spec:
+      serviceAccountName: deployment-creator-sa
       containers:
         - name: model-router-container
           image: aghilann/model-router
+          imagePullPolicy: Always  # Ensure the image is always pulled from the registry
           ports:
             - containerPort: 8000

@@ -1,14 +1,39 @@
 from fastapi import FastAPI, HTTPException
-from kubernetes import config
+from kubernetes import client, config
+import requests
 
 from k8s.MLDeployer import MLDeployer
 from models.MLModel import MLModel
+import os
 
 app = FastAPI()
 k8s = MLDeployer()
 
-config.load_kube_config()
+# Attempt to load from environment variable first
+kube_config_path = os.environ.get('KUBECONFIG')
+if kube_config_path and os.path.exists(kube_config_path):
+    config.load_kube_config()
+else:
+    config.load_incluster_config()
 
+@app.get("/test")
+def test():
+    service_name = "nginx-v1-service"
+    url = f"http://{service_name}/"
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # Raise an exception for HTTP errors (4xx, 5xx)
+
+        # Print the response
+        print(f"Response from {url}:")
+        print(response.text)
+
+        return {"status_code": response.status_code, "response": response.text}
+
+    except requests.exceptions.RequestException as e:
+        print(f"RequestException: {e}")
+        return {"error": str(e)}
 
 @app.post("/model")
 async def create_model(model: MLModel):

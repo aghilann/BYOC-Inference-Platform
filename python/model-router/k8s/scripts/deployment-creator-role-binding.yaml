@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: deployment-creator-binding
+  namespace: default # Or your desired namespace
+subjects:
+- kind: ServiceAccount
+  name: deployment-creator-sa
+  namespace: default # Or your desired namespace
+roleRef:
+  kind: Role
+  name: deployment-creator
+  apiGroup: rbac.authorization.k8s.io

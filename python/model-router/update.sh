@@ -22,7 +22,7 @@ docker push $DOCKER_USERNAME/$IMAGE_NAME:$IMAGE_TAG
 
 # Update Kubernetes Deployment to use the new image
 echo "Updating Kubernetes Deployment..."
-kubectl set image deployment/model-router-deployment model-router=$DOCKER_USERNAME/$IMAGE_NAME:$IMAGE_TAG --record
+kubectl set image deployment/model-router-deployment model-router=$DOCKER_USERNAME/$IMAGE_NAME:$IMAGE_TAG --record --image-pull-policy=Always
 
 # Check the rollout status
 kubectl rollout status deployment/model-router-deployment
