@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Dict, Optional
+from datetime import datetime, timezone
 
 
 class MLModel(BaseModel):
@@ -10,8 +11,7 @@ class MLModel(BaseModel):
     min_replicas: Optional[int] = 1
     max_replicas: Optional[int] = 10
     description: Optional[str] = None
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
+    created_at: Optional[str] = datetime.now(timezone.utc)
     author: Optional[str] = None
     tags: Optional[List[str]] = None
     dependencies: Optional[Dict[str, str]] = None

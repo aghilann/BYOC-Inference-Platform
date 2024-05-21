@@ -22,12 +22,12 @@ docker push $DOCKER_USERNAME/$IMAGE_NAME:$IMAGE_TAG
 
 # Update Kubernetes Deployment to use the new image
 echo "Updating Kubernetes Deployment..."
-kubectl set image deployment/model-router-deployment model-router=$DOCKER_USERNAME/$IMAGE_NAME:$IMAGE_TAG --record --image-pull-policy=Always
+kubectl set image deployment/modelrouter-deployment modelrouter=$DOCKER_USERNAME/$IMAGE_NAME:$IMAGE_TAG --record --image-pull-policy=Always
 
 echo "Forcing a rollout restart..."
-kubectl rollout restart deployment/model-router-deployment
+kubectl rollout restart deployment/modelrouter-deployment
 
 # Check the rollout status
-kubectl rollout status deployment/model-router-deployment
+kubectl rollout status deployment/modelrouter-deployment
 
 echo "Deployment successfully updated with the new image."
