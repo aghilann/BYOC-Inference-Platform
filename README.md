@@ -33,6 +33,7 @@ The BYOC (Bring Your Own Container) Inference Platform runs on Kubernetes, lever
 ### Architecture Overview
 
 ![Architecture Diagram](architecture_diagram.png)
+![UI](ui.png)
 
 ### Components:
 
