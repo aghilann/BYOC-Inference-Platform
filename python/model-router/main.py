@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from kubernetes import client, config
 import requests
+import psycopg2
 
 from k8s.MLDeployer import MLDeployer
 from models.MLModel import MLModel
@@ -16,7 +17,33 @@ if kube_config_path and os.path.exists(kube_config_path):
 else:
     config.load_incluster_config()
 
-@app.get("/test")
+db_name = os.getenv('POSTGRES_DB')
+db_user = os.getenv('POSTGRES_USER')
+db_password = os.getenv('POSTGRES_PASSWORD')
+db_host = os.getenv('POSTGRES_HOST')
+db_port = os.getenv("POSTGRES_PORT")
+
+db_config = {
+    'dbname': db_name,
+    'user': db_user,
+    'password': db_password,
+    'host': db_host,  # This is the Kubernetes service name
+    'port': db_port,
+}
+
+print(f"Database configuration: {db_config}")
+@app.get("/dbx/version")
+async def db_version():
+    conn = psycopg2.connect(**db_config)
+    cursor = conn.cursor()
+    cursor.execute("SELECT version();")
+    record = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    return {"message": "Connected to PostgreSQL", "db_version": record[0]}
+
+
+@app.get("/test2")
 def test():
     service_name = "nginx-v1-service"
     url = f"http://{service_name}/"
@@ -34,6 +61,7 @@ def test():
     except requests.exceptions.RequestException as e:
         print(f"RequestException: {e}")
         return {"error": str(e)}
+
 
 @app.post("/model")
 async def create_model(model: MLModel):
