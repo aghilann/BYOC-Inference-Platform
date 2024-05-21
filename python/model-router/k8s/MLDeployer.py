@@ -14,7 +14,7 @@ else:
 class MLDeployer:
     def __init__(self):
         # TODO: Saves models even if it is not deployed successfully and subsequent requests will fail
-        self.models: Dict[str, Dict] = {}
+        self.models: Dict[str, MLModel] = {}
         self.apps_v1_api = client.AppsV1Api()
         self.autoscaling_v1_api = client.AutoscalingV1Api()
         self.core_v1_api = client.CoreV1Api()
@@ -66,16 +66,11 @@ class MLDeployer:
             raise
 
         # Store model details in memory
-        self.models[model_key] = {
-            "model_image_url": model_image_url,
-            "model_exposed_port": model_exposed_port,
-            "model_name": model_name,
-            "model_version": model_version,
-        }
+        self.models[model_key] = model
 
         return model
 
-    def apply_horizontal_autoscaler(self, model: MLModel, min_replicas: int = 1, max_replicas: int = 10):
+    def apply_horizontal_autoscaler(self, model: MLModel):
         model_name = model.name
         model_version = model.version
         autoscaler = client.V1HorizontalPodAutoscaler(
@@ -86,8 +81,8 @@ class MLDeployer:
                 labels={"app": f"{model_name}-{model_version}"},
             ),
             spec=client.V1HorizontalPodAutoscalerSpec(
-                min_replicas=min_replicas,
-                max_replicas=max_replicas,
+                min_replicas=model.min_replicas,
+                max_replicas=model.max_replicas,
                 scale_target_ref=client.V1CrossVersionObjectReference(
                     api_version="apps/v1",
                     kind="Deployment",
@@ -136,25 +131,18 @@ class MLDeployer:
 
         return model
 
+    # TODO GET MODEL
     def get_model(self, model_key: str) -> MLModel:
         model_split = model_key.split(":")
 
         if len(model_split) != 2:
             raise ValueError("Invalid model key")
 
-        model_name, model_version = model_split
+        # Search for the model in the cluster
 
-        if model_key not in self.models:
-            raise ValueError("Model not found")
-
-        model_metadata = self.models[model_key]
-
-        return MLModel(
-            name=model_name,
-            image_url=model_metadata["model_image_url"],
-            exposed_port=model_metadata["model_exposed_port"],
-            version=model_metadata["model_version"],
-        )
+        model: MLModel = self.models[model_key]
+        raise ValueError("Model not found")
+        return model
 
     def delete_model(self, model_key: str):
         model_split = model_key.split(":")
@@ -163,9 +151,6 @@ class MLDeployer:
             raise ValueError("Invalid model key")
 
         model_name, model_version = model_split
-
-        if model_key not in self.models:
-            raise ValueError("Model not found")
 
         try:
             self.apps_v1_api.delete_namespaced_deployment(
@@ -180,8 +165,6 @@ class MLDeployer:
         except ApiException as e:
             print(f"Exception when deleting model: {e}")
             raise
-
-        del self.models[model_key]
 
 
 if __name__ == "__main__":

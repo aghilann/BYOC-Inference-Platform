@@ -15,7 +15,10 @@ spec:
       serviceAccountName: deployment-creator-sa
       containers:
         - name: model-router-container
-          image: aghilann/model-router
-          imagePullPolicy: Always  # Ensure the image is always pulled from the registry
+          image: aghilann/model-router:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: db-config
