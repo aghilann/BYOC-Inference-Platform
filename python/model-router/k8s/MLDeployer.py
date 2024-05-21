@@ -2,8 +2,13 @@ from typing import Dict
 from kubernetes.client.rest import ApiException
 from kubernetes import client, config
 from models.MLModel import MLModel
+import os
 
-config.load_kube_config()
+kube_config_path = os.environ.get('KUBECONFIG')
+if kube_config_path and os.path.exists(kube_config_path):
+    config.load_kube_config()
+else:
+    config.load_incluster_config()
 
 
 class MLDeployer:
