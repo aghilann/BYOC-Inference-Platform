@@ -3,8 +3,9 @@ from kubernetes import client, config
 import requests
 import psycopg2
 from k8s.MLDeployer import MLDeployer
-from models.MLModel import MLModel
 from models.Database import Database
+from models.MLModel import MLModel
+from models.MLModelPersistence import MLModelPersistence
 import os
 
 app = FastAPI()
@@ -18,7 +19,7 @@ else:
     config.load_incluster_config()
 
 db = Database.from_env()
-
+ml_persistence = MLModelPersistence(db)
 
 @app.get("/db/version")
 async def get_db_version():
@@ -37,29 +38,38 @@ async def create_model(model: MLModel):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+    ml_persistence.save(model)
     return {"status": "Model deployed", **model.dict()}
 
 
 @app.delete("/model/{model_name}/{model_version}")
 def delete_model(model_name: str, model_version: str):
-    model_key = f"{model_name}:{model_version}"
     try:
-        k8s.delete_model(model_key)
+        k8s.delete_model(model_name, model_version)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+    try:
+        ml_persistence.delete(model_name, model_version)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
     return {"status": "Model deleted"}
 
 
 @app.get("/model/{model_name}/{model_version}", response_model=MLModel)
 async def get_model(model_name: str, model_version: str):
-    model_key = f"{model_name}:{model_version}"
-    model_metadata = k8s.get_model(model_key)
+    model: MLModel
+    try:
+        model = ml_persistence.get(model_name, model_version)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
     return {
-        **model_metadata.dict()
+        "status": "Model found",
+        **model.dict()
     }
 
 

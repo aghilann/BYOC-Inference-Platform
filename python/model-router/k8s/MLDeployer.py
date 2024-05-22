@@ -13,8 +13,6 @@ else:
 
 class MLDeployer:
     def __init__(self):
-        # TODO: Saves models even if it is not deployed successfully and subsequent requests will fail
-        self.models: Dict[str, MLModel] = {}
         self.apps_v1_api = client.AppsV1Api()
         self.autoscaling_v1_api = client.AutoscalingV1Api()
         self.core_v1_api = client.CoreV1Api()
@@ -25,10 +23,6 @@ class MLDeployer:
         model_image_url = model.image_url
 
         model_exposed_port = model.exposed_port
-        model_key = f"{model_name}:{model_version}"
-
-        if model_key in self.models:
-            raise ValueError("Model already exists")
 
         deployment = client.V1Deployment(
             api_version="apps/v1",
@@ -64,9 +58,6 @@ class MLDeployer:
         except ApiException as e:
             print(f"Exception when creating deployment: {e}")
             raise
-
-        # Store model details in memory
-        self.models[model_key] = model
 
         return model
 
@@ -131,27 +122,7 @@ class MLDeployer:
 
         return model
 
-    # TODO GET MODEL
-    def get_model(self, model_key: str) -> MLModel:
-        model_split = model_key.split(":")
-
-        if len(model_split) != 2:
-            raise ValueError("Invalid model key")
-
-        # Search for the model in the cluster
-
-        model: MLModel = self.models[model_key]
-        raise ValueError("Model not found")
-        return model
-
-    def delete_model(self, model_key: str):
-        model_split = model_key.split(":")
-
-        if len(model_split) != 2:
-            raise ValueError("Invalid model key")
-
-        model_name, model_version = model_split
-
+    def delete_model(self, model_name: str, model_version: str):
         try:
             self.apps_v1_api.delete_namespaced_deployment(
                 name=f"{model_name}-{model_version}", namespace="default"
