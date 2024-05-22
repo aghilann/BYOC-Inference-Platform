@@ -8,6 +8,8 @@ In machine learning, deploying and scaling inference workloads can be complex an
 
 The BYOC (Bring Your Own Container) Inference Platform runs on Kubernetes, leveraging its scaling capabilities. Data scientists simply need to Dockerize their models and push them to a registry. The platform takes care of deployment and scaling automatically.
 
+[Design Document](https://docs.google.com/document/d/15LOytFn24WqN6yFthX8IcjPB7PXFGkUhGZrB_8BmO4s/edit)
+
 ### Key Features:
 
 - **Router Pod**: Built with Python and FastAPI (potentially Go for better performance), the router pod handles incoming requests, determines the requested model, and routes them to the appropriate service.
