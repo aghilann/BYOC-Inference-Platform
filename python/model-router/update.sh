@@ -25,9 +25,9 @@ echo "Updating Kubernetes Deployment..."
 kubectl set image deployment/modelrouter-deployment modelrouter=$DOCKER_USERNAME/$IMAGE_NAME:$IMAGE_TAG --record --image-pull-policy=Always
 
 echo "Forcing a rollout restart..."
-kubectl rollout restart deployment/modelrouter-deployment
+kubectl rollout restart deployment/model-router-deployment
 
 # Check the rollout status
-kubectl rollout status deployment/modelrouter-deployment
+kubectl rollout status deployment/model-router-deployment
 
 echo "Deployment successfully updated with the new image."
